@@ -42,31 +42,6 @@ class CanvasRender extends Render {
     ctx.clearRect(0, 0, width, height)
   }
 
-  old (ctx, o, cacheRender) {
-    let mtx = o._matrix
-    if(o.children){
-      let list = o.children.slice(0),
-        l = list.length
-      for (let i = 0; i < l; i++) {
-        let child = list[i]
-        mtx.initialize(1, 0, 0, 1, 0, 0)
-        mtx.appendTransform(o.x , o.y , o.scaleX, o.scaleY, o.rotation, o.skewX, o.skewY, o.originX, o.originY)
-        // if (!this.checkBoundEvent(child)) continue
-        ctx.save()
-        let status = this._render(ctx, child, cacheRender?null:mtx, cacheRender)
-        if(status && status.instanceOf(Promise)){
-          return status.then(()=>{
-            ctx.restore()
-          })
-        }else{
-          ctx.restore()
-        }
-      }
-    } else {
-      return this._render(ctx, o, mtx,cacheRender)
-    }
-  }
-
   render (ctx, o, cacheRender) {
     let mtx = o._matrix
       let _self = this;
@@ -96,6 +71,8 @@ class CanvasRender extends Render {
 
   _render (ctx, o, mtx, cacheRender) {
     if (!o.isVisible()) return
+    const _self = this;
+
     if (mtx && !o.fixed) {
       o._matrix.initialize(mtx.a, mtx.b, mtx.c, mtx.d, mtx.tx, mtx.ty)
     } else {
@@ -138,12 +115,17 @@ class CanvasRender extends Render {
     } else if (o instanceof Group) {
       let list = o.children.slice(0),
         l = list.length
-      for (let i = 0 ; i < l; i++) {
-        ctx.save()
-        let target = this._render(ctx, list[i], mtx)
-        if (target) return target
-        ctx.restore()
-      }
+        return loopPromise(list, function (child) {
+          ctx.save()
+          let status = _self._render(ctx, child, mtx)
+          if(status && status instanceof Promise){
+            return status.then(()=>{
+                ctx.restore()
+            })
+          }else{
+            ctx.restore()
+          }
+        })
     } else if (o instanceof Graphics) {
       o.render(ctx)
     } else if (o instanceof Sprite && o.rect) {
