@@ -133,7 +133,7 @@ class CanvasRender extends Render {
       let rect = o.rect
       ctx.drawImage(o.img, rect[0], rect[1], rect[2], rect[3], 0, 0, rect[2], rect[3])
     } else if (o instanceof Bitmap) {
-      if(Bitmap.loading.hasOwnProperty(o.img)){
+      if(Bitmap.loading.hasOwnProperty(o.img) && Bitmap.loading[o.img] !== true){
          return Bitmap.loading[o.img].then(()=>{
              let bRect = o.rect
              ctx.drawImage(o.img, bRect[0], bRect[1], bRect[2], bRect[3], 0, 0, bRect[2], bRect[3])

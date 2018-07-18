@@ -31,7 +31,7 @@ class Bitmap extends DisplayObject {
             this.height = result.height
             onLoad && onLoad.call(this)
             Bitmap.cache[img] = result
-            delete Bitmap.loading[img]
+            Bitmap.loading[img] = true
             resolve()
           })
         })
